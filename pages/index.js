@@ -1,8 +1,10 @@
-import Layout from '../components/layout'
-import { useFetchUser } from '../lib/user'
+import Layout from "../components/layout";
+import { useFetchUser } from "../lib/user";
+import Complaint from "../models/Complaint";
+import dbConnect from "../lib/dbConnect";
 
 function Home() {
-  const { user, loading } = useFetchUser()
+  const { user, loading } = useFetchUser();
 
   return (
     <Layout user={user} loading={loading}>
@@ -16,7 +18,7 @@ function Home() {
             To test the login click in <i>Login</i>
           </p>
           <p>
-            Once you have logged in you should be able to click in{' '}
+            Once you have logged in you should be able to click in{" "}
             <i>Profile</i> and <i>Logout</i>
           </p>
         </>
@@ -31,7 +33,20 @@ function Home() {
         </>
       )}
     </Layout>
-  )
+  );
 }
 
-export default Home
+export async function getServerSideProps() {
+  await dbConnect();
+
+  const result = await Complaint.find({});
+  const complaints = result.map((doc) => {
+    const complaint = doc.toObject();
+    complaint._id = complaint._id.toString();
+    complaint.createdAt = complaint.createdAt.toString();
+    return complaint;
+  });
+  return { props: { complaints } };
+}
+
+export default Home;
